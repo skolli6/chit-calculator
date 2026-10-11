@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chit Calculator</title>
+<style>
+:root{
+  --bg:#f3f1ec;--card:#ffffff;--tx:#1c2622;--mu:#66716b;--bd:#e2ddd3;
+  --ac:#17694a;--ac2:#0e4a33;--soft:#eef4f0;--warn:#b57412;--warnbg:#fbf3e4;
+  --bad:#b3392f;--badbg:#fbeceb;--hl:#fbf1dc;--input:#f7f6f2;
+  --r:16px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#111714;--card:#1a221e;--tx:#e8eee9;--mu:#9aa6a0;--bd:#2c3731;
+    --ac:#3fb67f;--ac2:#1e6b4b;--soft:#222e28;--warn:#e8b04a;--warnbg:#2d2718;
+    --bad:#ef7b70;--badbg:#321f1d;--hl:#3a3320;--input:#151c18;color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:600px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 14px) 14px calc(env(safe-area-inset-bottom,0px) + 36px)}
+
+/* header */
+header{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.logo{width:44px;height:44px;border-radius:14px;background:var(--ac);color:#fff;display:grid;place-items:center;font-size:22px;font-weight:700;flex:none}
+header h1{font-size:20px;margin:0;line-height:1.2}
+header p{margin:2px 0 0;font-size:13px;color:var(--mu)}
+.top{margin-left:auto;display:flex;gap:8px}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.card h2{display:flex;align-items:center;gap:10px;font-size:16px;margin:0 0 12px;line-height:1.3}
+.num{width:26px;height:26px;border-radius:50%;background:var(--ac);color:#fff;font-size:13px;font-weight:700;display:inline-grid;place-items:center;flex:none}
+.sub{font-size:13px;color:var(--mu);margin:-6px 0 12px}
+.hint{font-size:13px;color:var(--mu);margin:10px 0 0}
+
+/* form */
+.fields{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:500px){.fields.two{grid-template-columns:1fr 1fr}.fields.three{grid-template-columns:1fr 1fr 1fr}}
+label{display:block;font-size:13px;color:var(--mu);margin-bottom:5px;font-weight:600}
+input,select{width:100%;height:48px;padding:0 13px;border:1px solid var(--bd);border-radius:12px;background:var(--input);color:var(--tx);font:inherit;font-size:16px}
+input:focus,select:focus{outline:2px solid var(--ac);outline-offset:1px;background:var(--card)}
+
+/* buttons */
+.btn{min-height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--ac);background:transparent;color:var(--ac);font:600 14px system-ui;cursor:pointer;white-space:nowrap}
+.btn.primary{background:var(--ac);color:#fff}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.btn.sm{min-height:34px;padding:0 10px;font-size:13px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:14px;padding:4px;gap:4px}
+.seg button{min-height:42px;border:0;border-radius:11px;background:transparent;color:var(--mu);font:600 14px system-ui;cursor:pointer;padding:0 6px}
+.seg button.on{background:var(--card);color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+
+/* messages */
+.msg{border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:14px;border:1px solid var(--warn);background:var(--warnbg)}
+.msg.err{border-color:var(--bad);background:var(--badbg)}
+
+/* monthly entries */
+.months{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
+@media (min-width:520px){.months{grid-template-columns:1fr 1fr}}
+.mcard{border:1px solid var(--bd);border-radius:14px;padding:10px 12px;background:var(--card)}
+.mcard.me{border-color:var(--warn);background:var(--hl)}
+.mtop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mo{font-weight:700;font-size:14px}
+.mo small{display:block;font-weight:600;color:var(--warn);font-size:11px;letter-spacing:.02em}
+.mtop input{width:150px;height:42px;text-align:right;font-weight:600}
+.mtop input.est{font-style:italic;color:var(--mu)}
+.mbot{display:flex;justify-content:space-between;font-size:13px;color:var(--mu);margin-top:8px}
+.mbot b{color:var(--tx);font-weight:600}
+
+/* result */
+.hero{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;border:0}
+.hero h2{color:#fff}
+.hero .lbl{font-size:14px;opacity:.92}
+.hero .big{font-size:36px;font-weight:700;line-height:1.1;margin:6px 0 2px}
+.hero .sub2{font-size:14px;opacity:.92}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.tile{background:rgba(255,255,255,.15);border-radius:12px;padding:10px 12px}
+.tile span{display:block;font-size:12px;opacity:.9}
+.tile b{font-size:17px;font-weight:700}
+.verdict{margin-top:12px;background:rgba(255,255,255,.17);border-radius:12px;padding:10px 12px;font-size:15px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:var(--soft);border-radius:12px;padding:10px 12px}
+.stat span{display:block;font-size:12px;color:var(--mu)}
+.stat b{font-size:17px}
+.say{border-left:4px solid var(--ac);padding:6px 12px;margin:12px 0;font-size:15px}
+.good{color:var(--ac)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+
+/* report */
+#report table{width:100%;border-collapse:collapse;margin:6px 0 4px;font-size:14px}
+#report td,#report th{border-bottom:1px solid var(--bd);padding:7px 6px;text-align:right}
+#report th:first-child,#report td:first-child{text-align:left}
+#report h3{font-size:15px;margin:16px 0 4px}
+#report h1{font-size:18px;margin:0 0 2px}
+#report p{font-size:13px;color:var(--mu);margin:4px 0}
+.reportTable{overflow-x:auto}
+
+/* snapshots */
+.snapRow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.snapRow:last-child{border-bottom:0}
+.snapRow .nm{flex:1;min-width:140px;font-weight:600}
+.snapRow .nm small{display:block;font-weight:400;color:var(--mu);font-size:12px}
+.snapRow.cur .nm{color:var(--ac)}
+.row2{display:flex;gap:8px}
+.row2 input{flex:1}
+
+details{margin-top:4px}
+details summary{cursor:pointer;color:var(--ac);font-weight:600;font-size:14px;min-height:36px;display:flex;align-items:center}
+details ul{margin:6px 0 0;padding-left:20px;color:var(--mu);font-size:14px}
+details li{margin:4px 0}
+
+.hide{display:none!important}
+
+/* printing: only the report card */
+@media print{
+  body{background:#fff}
+  body *{visibility:hidden}
+  #reportCard,#reportCard *{visibility:visible}
+  #reportCard{position:absolute;left:0;top:0;width:100%;border:0;box-shadow:none;margin:0;padding:0;background:#fff}
+  .noprint{display:none!important}
+  #report,#report *{color:#000!important}
+  #report td,#report th{border-bottom:1px solid #999}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo">₹</div>
+  <div>
+    <h1>Chit Calculator</h1>
+    <p id="saveNote">Your entries are saved on this device.</p>
+  </div>
+  <div class="top">
+    <button class="btn sm" id="exBtn" type="button">Example</button>
+    <button class="btn sm danger" id="clrBtn" type="button">Clear</button>
+  </div>
+</header>
+
+<div id="msgs"></div>
+
+<!-- 1. Chit -->
+<section class="card">
+  <h2><span class="num">1</span>Chit details</h2>
+  <div class="fields three">
+    <div><label for="amt">Chit amount (₹)</label><input id="amt" inputmode="numeric" autocomplete="off"></div>
+    <div><label for="n">Members = months</label><input id="n" inputmode="numeric" autocomplete="off"></div>
+    <div><label for="fee">Foreman fee</label>
+      <select id="fee">
+        <option value="1">1%</option><option value="1.5">1.5%</option><option value="2">2%</option>
+        <option value="2.5">2.5%</option><option value="3">3%</option><option value="4">4%</option><option value="5">5%</option>
+      </select>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Monthly figures -->
+<section class="card">
+  <h2><span class="num">2</span>Monthly figures</h2>
+  <div class="seg" id="seg" role="group" aria-label="What you enter">
+    <button type="button" data-m="div">Dividend per member</button>
+    <button type="button" data-m="bid">Total bid</button>
+  </div>
+  <p class="hint" id="modeHint"></p>
+  <p class="hint">Enter the months you know. Leave future months blank; they are estimated from your last 3 entries.</p>
+  <div class="months" id="months"></div>
+</section>
+
+<!-- 3. Your plan and result -->
+<section class="card hero" id="resultCard">
+  <h2><span class="num" style="background:#fff;color:var(--ac)">3</span>Your result</h2>
+  <div class="fields two" style="margin-bottom:6px">
+    <div><label for="win" style="color:#dff3e8">Take the chit in month</label><input id="win" inputmode="numeric" autocomplete="off"></div>
+    <div><label for="rd" style="color:#dff3e8">RD rate (% per year)</label><input id="rd" inputmode="decimal" autocomplete="off"></div>
+  </div>
+  <div class="fields two" style="margin-bottom:0">
+    <div><label for="inv" style="color:#dff3e8">Interest on money you receive (% per year)</label><input id="inv" inputmode="decimal" autocomplete="off"></div>
+    <div></div>
+  </div>
+  <div id="result" style="margin-top:14px"></div>
+</section>
+
+<!-- 4. Next month -->
+<section class="card">
+  <h2><span class="num">4</span>Next month prediction</h2>
+  <div id="pred"></div>
+</section>
+
+<!-- 5. Share / print -->
+<section class="card" id="reportCard">
+  <h2><span class="num">5</span>Report, share and PDF</h2>
+  <div class="btns noprint">
+    <button class="btn primary" id="shareBtn" type="button">Share</button>
+    <button class="btn" id="printBtn" type="button">Print / Save as PDF</button>
+  </div>
+  <p class="hint noprint" id="actMsg"></p>
+  <div id="report" style="margin-top:12px"></div>
+</section>
+
+<!-- 6. Saved snapshots -->
+<section class="card noprint">
+  <h2><span class="num">6</span>Saved snapshots</h2>
+  <p class="sub" id="snapInfo">Save a named copy to come back to later.</p>
+  <div class="row2">
+    <input id="snapName" placeholder="Name, e.g. Chit A, Oct 2026" aria-label="Snapshot name" autocomplete="off">
+    <button class="btn primary" id="snapSave" type="button">Save</button>
+  </div>
+  <div class="btns" id="snapBtns" style="margin-top:10px"></div>
+  <div id="snapList" style="margin-top:6px"></div>
+</section>
+
+<details class="card noprint">
+  <summary>How the numbers are worked out</summary>
+  <ul>
+    <li>Installment = chit amount ÷ members.</li>
+    <li>Total bid includes the foreman fee. Dividend per member = total bid ÷ members.</li>
+    <li>Each member pays = installment − dividend per member.</li>
+    <li>Winner gets = chit amount − total bid.</li>
+    <li>Your profit = what you receive − everything you pay over the full term.</li>
+    <li>Total gain = profit + interest on the money you receive, from the month you receive it to the last month.</li>
+    <li>RD = your monthly payments deposited each month at the RD rate (quarterly compounding), valued at the end of the term.</li>
+  </ul>
+  <p class="hint">Example: ₹10,00,000, 20 members, 3% fee. Dividend ₹11,500 (total bid ₹2,30,000) in month 1: each member pays ₹38,500 and the winner gets ₹7,70,000.</p>
+  <p class="hint">This is an estimate for information only. It is not financial or legal advice.</p>
+</details>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const KEY="chit-easy-v1", SKEY="chit-easy-snaps";
+const DEF={amt:"1000000",n:"20",fee:"3",win:"14",rd:"7",inv:"0",mode:"div",B:[]};
+const FEES=["1","1.5","2","2.5","3","4","5"];
+let S=JSON.parse(JSON.stringify(DEF)), curSnap=null;
+
+/* ---------- helpers ---------- */
+function num(x){const v=parseFloat(String(x==null?"":x).replace(/[^0-9.]/g,""));return isFinite(v)?v:NaN}
+function numOr(x,d){const v=num(x);return isNaN(v)?d:v}
+function inr(x){return isFinite(x)?(x<0?"−":"")+"₹"+Math.round(Math.abs(x)).toLocaleString("en-IN"):"–"}
+function pc(x){return isFinite(x)?(x>=0?"+":"")+x.toFixed(2)+"%":"–"}
+function esc(t){return String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function sanitize(d){
+  const o=JSON.parse(JSON.stringify(DEF));
+  if(!d||typeof d!=="object")return o;
+  ["amt","n","fee","win","rd","inv"].forEach(k=>{if(d[k]!=null)o[k]=String(d[k])});
+  if(!FEES.includes(o.fee))o.fee="3";
+  o.mode=d.mode==="bid"?"bid":"div";
+  if(Array.isArray(d.B))o.B=d.B.slice(0,60).map(v=>typeof v==="number"&&isFinite(v)&&v>=0?v:null);
+  return o;
+}
+
+/* ---------- core model ---------- */
+function compute(){
+  const A=numOr(S.amt,0),nRaw=numOr(S.n,NaN);
+  if(!(A>0))return {error:"Enter the chit amount."};
+  if(!(nRaw>=2&&nRaw<=60))return {error:"Members must be between 2 and 60."};
+  const n=Math.round(nRaw),fp=parseFloat(S.fee),fee=A*fp/100,inst=A/n,warn=[];
+  const bids=new Array(n).fill(0),est=new Array(n).fill(true),known=[];
+  for(let k=0;k<n;k++){
+    const v=S.B[k];
+    if(typeof v==="number"&&isFinite(v)&&v>=0){
+      let b=v;
+      if(b>A){warn.push("Month "+(k+1)+" is more than the chit amount. Limited to the chit amount.");b=A}
+      else if(b<fee)warn.push("Month "+(k+1)+" is less than the foreman fee. Please check it.");
+      bids[k]=b;est[k]=false;known.push(b);
+    }
+  }
+  const last=known.slice(-3);
+  const sugg=last.length?Math.min(A,Math.max(fee,Math.round(last.reduce((a,b)=>a+b,0)/last.length/1000)*1000)):0;
+  for(let k=0;k<n;k++)if(est[k])bids[k]=sugg;
+  const pay=bids.map(b=>inst-b/n),prize=bids.map(b=>A-b);
+  const totalPaid=pay.reduce((a,b)=>a+b,0);
+  const nextK=est.indexOf(true);
+  let W=Math.round(numOr(S.win,1));
+  if(!(W>=1&&W<=n)){if(S.win.trim()!=="")warn.push("Your month must be between 1 and "+n+". Showing month 1.");W=1}
+  return {A,n,fp,fee,inst,bids,est,known,last,sugg,pay,prize,totalPaid,nextK,W,warn};
+}
+function invRate(){const r=numOr(S.inv,0)/100;return(r>=0&&r<=1)?r:0}
+function interestOn(M,W){return M.prize[W-1]*invRate()*(M.n-W+1)/12}
+function rdInfo(M){
+  let r=numOr(S.rd,7)/100,warn="";
+  if(!(r>=0&&r<=1)){r=0.07;warn="RD rate must be between 0% and 100%. Using 7% for now."}
+  const i=Math.pow(1+r/4,1/3)-1;               // quarterly compounding, as banks do
+  let MRD=0;for(let k=0;k<M.n;k++)MRD+=M.pay[k]*Math.pow(1+i,M.n-k);
+  return {r,MRD,warn};
+}
+function predict(M){
+  const nk=M.nextK;if(nk<0)return null;
+  const recent=M.last,point=Math.round(recent.reduce((a,b)=>a+b,0)/recent.length/1000)*1000;
+  const lo=Math.min.apply(null,recent),hi=Math.max.apply(null,recent);
+  const gainAt=bid=>{
+    const tp=M.totalPaid-M.pay[nk]+(M.inst-bid/M.n),pr=M.A-bid;
+    return((pr-tp)+pr*invRate()*(M.n-nk)/12)/tp*100;
+  };
+  const falling=recent.length===3&&recent[2]<recent[0]*0.95,rising=recent.length===3&&recent[2]>recent[0]*1.05;
+  return {m:nk+1,point,lo,hi,dv:point/M.n,pays:M.inst-point/M.n,gets:M.A-point,gMid:gainAt(point),gLow:gainAt(hi),gHigh:gainAt(lo),n:recent.length,falling,rising};
+}
+
+/* ---------- rendering ---------- */
+function paintControls(){
+  [].forEach.call($("seg").querySelectorAll("button"),b=>b.classList.toggle("on",b.dataset.m===S.mode));
+  $("modeHint").textContent=S.mode==="div"
+    ?"Type the dividend each member received, including the fee share. Example: 11350."
+    :"Type the total bid for the month, including the fee. Example: 227000.";
+  ["amt","n","win","rd","inv"].forEach(k=>{if(document.activeElement!==$(k))$(k).value=S[k]});
+  if($("fee").value!==S.fee)$("fee").value=S.fee;
+}
+function buildRows(M){
+  const box=$("months"),stamp=M.n+"|"+S.mode;
+  if(box.dataset.s!==stamp){
+    let h="";
+    for(let k=0;k<M.n;k++){
+      h+='<div class="mcard" data-card="'+k+'"><div class="mtop"><div class="mo" data-lbl>Month '+(k+1)+'</div>'+
+         '<input type="text" inputmode="numeric" autocomplete="off" data-k="'+k+'" aria-label="Month '+(k+1)+'"></div>'+
+         '<div class="mbot"><span>Member pays <b data-pay>–</b></span><span>Winner gets <b data-get>–</b></span></div></div>';
+    }
+    box.innerHTML=h;box.dataset.s=stamp;
+  }
+  const W=M.W,hasData=M.known.length>0;
+  box.querySelectorAll(".mcard").forEach(card=>{
+    const k=+card.dataset.card,inp=card.querySelector("input"),b=S.B[k];
+    if(document.activeElement!==inp){
+      inp.value=(typeof b==="number")?String(Math.round(S.mode==="div"?b/M.n:b)):"";
+    }
+    inp.classList.toggle("est",M.est[k]);
+    inp.placeholder=hasData?"≈ "+Math.round(S.mode==="div"?M.bids[k]/M.n:M.bids[k]).toLocaleString("en-IN"):"";
+    card.classList.toggle("me",k+1===W);
+    card.querySelector("[data-lbl]").innerHTML="Month "+(k+1)+(k+1===W?"<small>YOUR MONTH</small>":"");
+    card.querySelector("[data-pay]").textContent=hasData?inr(M.pay[k]):"–";
+    card.querySelector("[data-get]").textContent=hasData?inr(M.prize[k]):"–";
+  });
+}
+function renderResult(M){
+  const box=$("result");
+  if(!M.known.length){box.innerHTML='<p class="sub2" style="margin:0">Enter at least one month above to see your result.</p>';return}
+  const W=M.W,pr=M.prize[W-1],tp=M.totalPaid,profit=pr-tp,int=interestOn(M,W),gain=profit+int;
+  const rd=rdInfo(M),pG=gain/tp*100,pP=profit/tp*100,rdPct=(rd.MRD-tp)/tp*100,ahead=pG>=rdPct;
+  box.innerHTML=
+    '<div class="lbl">If you take the chit in month '+W+', your total gain is</div>'+
+    '<div class="big">'+(gain>=0?"+":"")+inr(gain)+'</div>'+
+    '<div class="sub2">'+pc(pG)+' of what you pay</div>'+
+    '<div class="tiles">'+
+      '<div class="tile"><span>You pay in total</span><b>'+inr(tp)+'</b></div>'+
+      '<div class="tile"><span>You receive</span><b>'+inr(pr)+'</b></div>'+
+      '<div class="tile"><span>Profit from chit</span><b>'+(profit>=0?"+":"")+inr(profit)+' ('+pc(pP)+')</b></div>'+
+      '<div class="tile"><span>Interest on money received</span><b>'+(int>=0?"+":"")+inr(int)+'</b></div>'+
+      '<div class="tile"><span>RD amount at end ('+(rd.r*100).toFixed(2)+'%)</span><b>'+inr(rd.MRD)+'</b></div>'+
+      '<div class="tile"><span>RD profit %</span><b>'+pc(rdPct)+'</b></div>'+
+    '</div>'+
+    '<div class="verdict">'+(ahead
+      ?"Comparison: the chit ("+pc(pG)+") is ahead of the RD ("+pc(rdPct)+")."
+      :"Comparison: the RD ("+pc(rdPct)+") is ahead of the chit ("+pc(pG)+")."
+    )+'</div>'+
+    (rd.warn?'<p class="hint" style="color:#fff;opacity:.9">'+esc(rd.warn)+'</p>':"");
+}
+function renderPred(M){
+  const box=$("pred");
+  if(!M.known.length){box.innerHTML='<p class="sub" style="margin:0">Enter a few months above to see the next-month prediction.</p>';return}
+  const p=predict(M);
+  if(!p){box.innerHTML='<p class="sub" style="margin:0">All months are entered. There is no next month to predict.</p>';return}
+  box.innerHTML=
+    '<div class="say">Month <b>'+p.m+'</b>: expected total bid about <b>'+inr(p.point)+'</b>, likely between <b>'+inr(p.lo)+'</b> and <b>'+inr(p.hi)+'</b>.</div>'+
+    '<div class="stats">'+
+      '<div class="stat"><span>Dividend per member</span><b>'+inr(p.dv)+'</b></div>'+
+      '<div class="stat"><span>Each member pays</span><b>'+inr(p.pays)+'</b></div>'+
+      '<div class="stat"><span>Winner receives</span><b>'+inr(p.gets)+'</b></div>'+
+      '<div class="stat"><span>Expected gain if you take it</span><b>'+pc(p.gMid)+'</b></div>'+
+    '</div>'+
+    '<p class="hint">Gain range: '+pc(p.gLow)+' to '+pc(p.gHigh)+'. Based on your last '+p.n+' entered bids'+(p.falling?', which have been falling':p.rising?', which have been rising':'')+'. This is an estimate: real bids depend on the members.</p>';
+}
+function reportName(){const c=readSnaps().find(x=>x.id===curSnap);return c?c.name:"Chit summary"}
+function renderReport(M){
+  const box=$("report");
+  if(!M.known.length){box.innerHTML='<p class="hint">Enter at least one month to create the report.</p>';return}
+  const W=M.W,pr=M.prize[W-1],tp=M.totalPaid,profit=pr-tp,int=interestOn(M,W),gain=profit+int,rd=rdInfo(M);
+  let rows="";
+  for(let k=0;k<M.n;k++){
+    rows+="<tr><td>Month "+(k+1)+"</td><td>"+(M.est[k]?"Estimated":"Entered")+"</td><td>"+inr(M.bids[k])+"</td><td>"+inr(M.bids[k]/M.n)+"</td><td>"+inr(M.pay[k])+"</td><td>"+inr(M.prize[k])+"</td></tr>";
+  }
+  box.innerHTML=
+    '<h1>'+esc(reportName())+'</h1>'+
+    '<p>Created '+esc(new Date().toLocaleString("en-IN"))+'</p>'+
+    '<h3>Chit details</h3>'+
+    '<div class="reportTable"><table><tr><td>Chit amount</td><td>'+inr(M.A)+'</td></tr>'+
+    '<tr><td>Members (months)</td><td>'+M.n+'</td></tr>'+
+    '<tr><td>Foreman fee</td><td>'+M.fp+'% ('+inr(M.fee)+' in total)</td></tr>'+
+    '<tr><td>Monthly installment per member</td><td>'+inr(M.inst)+'</td></tr></table></div>'+
+    '<h3>Your result: taking the chit in month '+W+'</h3>'+
+    '<div class="reportTable"><table>'+
+    '<tr><td>You pay in total</td><td>'+inr(tp)+'</td></tr>'+
+    '<tr><td>You receive</td><td>'+inr(pr)+'</td></tr>'+
+    '<tr><td>Profit from chit</td><td>'+(profit>=0?"+":"")+inr(profit)+' ('+pc(profit/tp*100)+')</td></tr>'+
+    '<tr><td>Interest on money received at '+(invRate()*100).toFixed(2)+'%</td><td>'+inr(int)+'</td></tr>'+
+    '<tr><td><b>Total gain</b></td><td><b>'+(gain>=0?"+":"")+inr(gain)+' ('+pc(gain/tp*100)+')</b></td></tr>'+
+    '<tr><td>RD at '+(rd.r*100).toFixed(2)+'%: amount at end</td><td>'+inr(rd.MRD)+' ('+pc((rd.MRD-tp)/tp*100)+')</td></tr></table></div>'+
+    '<h3>Monthly figures</h3>'+
+    '<div class="reportTable"><table><tr><th>Month</th><th>Status</th><th>Total bid</th><th>Dividend</th><th>Member pays</th><th>Winner gets</th></tr>'+rows+'</table></div>'+
+    '<p>Figures for months not yet entered are estimates from the last 3 entered bids. This is an information tool, not financial or legal advice.</p>';
+}
+function summaryText(M){
+  const W=M.W,pr=M.prize[W-1],tp=M.totalPaid,profit=pr-tp,int=interestOn(M,W),gain=profit+int,rd=rdInfo(M);
+  return [
+    "Chit: "+inr(M.A)+", "+M.n+" members, "+M.fp+"% foreman fee",
+    "If I take it in month "+W+": pay in total "+inr(tp)+", receive "+inr(pr),
+    "Profit "+(profit>=0?"+":"")+inr(profit)+" ("+pc(profit/tp*100)+"), total gain incl. interest "+(gain>=0?"+":"")+inr(gain)+" ("+pc(gain/tp*100)+")",
+    "RD at "+(rd.r*100).toFixed(2)+"%: "+inr(rd.MRD)+" at end ("+pc((rd.MRD-tp)/tp*100)+")",
+    "Estimates are for months not yet entered. For information only."
+  ].join("\n");
+}
+
+function render(){
+  const M=compute();
+  $("msgs").innerHTML=M.error
+    ?'<div class="msg err">'+esc(M.error)+'</div>'
+    :M.warn.slice(0,3).map(w=>'<div class="msg">'+esc(w)+'</div>').join("");
+  paintControls();
+  if(M.error){
+    $("months").innerHTML="";$("months").dataset.s="";
+    $("result").innerHTML="";$("pred").innerHTML="";$("report").innerHTML="";
+    return;
+  }
+  buildRows(M);
+  renderResult(M);renderPred(M);renderReport(M);
+}
+
+/* ---------- storage ---------- */
+function save(){try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},S,{snap:curSnap})))}catch(e){}}
+function load(){
+  try{
+    const o=JSON.parse(localStorage.getItem(KEY)||"null");
+    if(o&&typeof o==="object"){
+      S=sanitize(o);
+      if(typeof o.snap==="string")curSnap=o.snap;
+    }
+  }catch(e){}
+}
+function readSnaps(){
+  try{const a=JSON.parse(localStorage.getItem(SKEY)||"[]");
+    return Array.isArray(a)?a.filter(x=>x&&typeof x.id==="string"&&typeof x.name==="string"&&x.data&&typeof x.data==="object"):[]}
+  catch(e){return[]}
+}
+function writeSnaps(a){try{localStorage.setItem(SKEY,JSON.stringify(a));return true}catch(e){return false}}
+function snapData(){return {amt:S.amt,n:S.n,fee:S.fee,win:S.win,rd:S.rd,inv:S.inv,mode:S.mode,B:S.B.slice()}}
+function same(a,b){return JSON.stringify(sanitize(a))===JSON.stringify(sanitize(b))}
+
+/* ---------- snapshots ---------- */
+function snapInfo(t){$("snapInfo").textContent=t}
+function paintInfo(){
+  const cur=readSnaps().find(x=>x.id===curSnap);
+  if(!cur){snapInfo("Save a named copy to come back to later.");return}
+  snapInfo(same(cur.data,snapData())
+    ?"Editing “"+cur.name+"”. No unsaved changes."
+    :"Editing “"+cur.name+"”. You have unsaved changes. Press Update to keep them.");
+}
+function renderSnaps(){
+  const list=readSnaps(),box=$("snapList"),btns=$("snapBtns");
+  box.innerHTML="";btns.innerHTML="";
+  const cur=list.find(x=>x.id===curSnap);
+  if(cur){
+    const up=document.createElement("button");up.className="btn primary";up.type="button";up.textContent="Update “"+cur.name.slice(0,24)+"”";
+    up.addEventListener("click",()=>{cur.data=snapData();cur.savedAt=Date.now();
+      if(writeSnaps(list)){snapInfo("Saved changes to “"+cur.name+"”.");renderSnaps()}else snapInfo("Could not save. Browser storage may be full or turned off.")});
+    const st=document.createElement("button");st.className="btn";st.type="button";st.textContent="Stop editing";
+    st.addEventListener("click",()=>{curSnap=null;save();renderSnaps();paintInfo()});
+    btns.appendChild(up);btns.appendChild(st);
+  }
+  if(!list.length){const p=document.createElement("p");p.className="hint";p.textContent="No saved snapshots yet.";box.appendChild(p);return}
+  list.forEach(sn=>{
+    const row=document.createElement("div");row.className="snapRow"+(sn.id===curSnap?" cur":"");
+    const nm=document.createElement("div");nm.className="nm";nm.textContent=sn.name;
+    const sm=document.createElement("small");sm.textContent=(sn.id===curSnap?"Editing now · ":"")+"Saved "+new Date(sn.savedAt||Date.now()).toLocaleString("en-IN");
+    nm.appendChild(sm);
+    const open=document.createElement("button");open.className="btn sm";open.type="button";open.textContent="Open";
+    open.addEventListener("click",()=>loadSnap(sn.id));
+    const del=document.createElement("button");del.className="btn sm danger";del.type="button";del.textContent="Delete";
+    let armed=0;
+    del.addEventListener("click",()=>{
+      if(!armed){del.textContent="Tap again";armed=setTimeout(()=>{armed=0;del.textContent="Delete"},3000);return}
+      clearTimeout(armed);
+      if(writeSnaps(readSnaps().filter(x=>x.id!==sn.id))){if(curSnap===sn.id)curSnap=null;save();snapInfo("Deleted “"+sn.name+"”.");renderSnaps();paintInfo()}
+    });
+    row.appendChild(nm);row.appendChild(open);row.appendChild(del);box.appendChild(row);
+  });
+  save();
+}
+function saveNew(){
+  const list=readSnaps();
+  if(list.length>=20){snapInfo("You can keep up to 20 snapshots. Delete one first.");return}
+  const name=($("snapName").value||"").trim().slice(0,60)||("Chit "+new Date().toLocaleDateString("en-IN"));
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  list.push({id,name,savedAt:Date.now(),data:snapData()});
+  if(!writeSnaps(list)){snapInfo("Could not save. Browser storage may be full or turned off.");return}
+  curSnap=id;$("snapName").value="";
+  snapInfo("Saved as “"+name+"”.");renderSnaps();paintInfo();
+}
+function loadSnap(id){
+  const sn=readSnaps().find(x=>x.id===id);
+  if(!sn){snapInfo("That snapshot no longer exists.");renderSnaps();return}
+  S=sanitize(sn.data);curSnap=id;
+  $("months").dataset.s="";
+  changed();renderSnaps();paintInfo();
+}
+
+/* ---------- share and print ---------- */
+function actMsg(t){$("actMsg").textContent=t}
+function copyText(text){
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){return navigator.clipboard.writeText(text).then(()=>true,()=>legacy(text))}}catch(e){}
+  return Promise.resolve(legacy(text));
+}
+function legacy(text){
+  const t=document.createElement("textarea");t.value=text;t.setAttribute("readonly","");
+  t.style.position="fixed";t.style.opacity="0";document.body.appendChild(t);t.select();
+  let ok=false;try{ok=document.execCommand("copy")}catch(e){}
+  document.body.removeChild(t);return ok;
+}
+async function shareNow(){
+  const M=compute();
+  if(M.error||!M.known.length){actMsg("Enter at least one month first.");return}
+  const text=summaryText(M),title=reportName();
+  if(navigator.share){
+    try{await navigator.share({title:title,text:text});actMsg("Shared.");return}
+    catch(e){if(e&&e.name==="AbortError"){actMsg("");return}}
+  }
+  const ok=await copyText(text);
+  actMsg(ok?"Summary copied. Paste it into WhatsApp, email or anywhere else."
+            :"Sharing is not available here. Use Print / Save as PDF below and share that file.");
+}
+function printNow(){
+  const M=compute();
+  if(M.error||!M.known.length){actMsg("Enter at least one month first.");return}
+  renderReport(M);
+  try{window.print()}catch(e){}
+  actMsg("If no print window opened, use your browser's Print (Ctrl+P or Cmd+P) and choose Save as PDF.");
+}
+
+/* ---------- events ---------- */
+function changed(){
+  try{save();render();paintInfo()}
+  catch(e){$("msgs").innerHTML='<div class="msg err">Something went wrong. Press Clear and try again.</div>'}
+}
+["amt","n","win","rd","inv"].forEach(id=>$(id).addEventListener("input",()=>{S[id]=$(id).value;if(id==="amt"||id==="n")$("months").dataset.s="";changed()}));
+$("fee").addEventListener("change",()=>{S.fee=$("fee").value;changed()});
+$("seg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.mode=b.dataset.m;$("months").dataset.s="";changed()});
+$("months").addEventListener("input",e=>{
+  const t=e.target;if(!t.dataset||t.dataset.k===undefined)return;
+  const k=+t.dataset.k,s=t.value.replace(/[^0-9.]/g,"");
+  const n=Math.round(numOr(S.n,0));
+  while(S.B.length<n)S.B.push(null);
+  const v=parseFloat(s);
+  S.B[k]=(s===""||!isFinite(v))?null:Math.round(S.mode==="div"?v*n:v);
+  changed();
+});
+$("exBtn").addEventListener("click",()=>{
+  curSnap=null;S=sanitize({amt:"1000000",n:"20",fee:"3",win:"14",rd:"7",inv:"0",mode:"div",B:[230000,220000,200000]});
+  $("months").dataset.s="";changed();renderSnaps();paintInfo();
+});
+let clrArmed=0;
+$("clrBtn").addEventListener("click",()=>{
+  const b=$("clrBtn");
+  if(!clrArmed){b.textContent="Tap again";clrArmed=setTimeout(()=>{clrArmed=0;b.textContent="Clear"},3000);return}
+  clearTimeout(clrArmed);clrArmed=0;b.textContent="Clear";
+  curSnap=null;S=sanitize(null);$("months").dataset.s="";changed();renderSnaps();paintInfo();
+});
+$("snapSave").addEventListener("click",saveNew);
+$("snapName").addEventListener("keydown",e=>{if(e.key==="Enter")saveNew()});
+$("shareBtn").addEventListener("click",shareNow);
+$("printBtn").addEventListener("click",printNow);
+window.addEventListener("error",e=>{$("msgs").innerHTML='<div class="msg err">Unexpected problem: '+esc(e.message)+'</div>'});
+
+load();
+$("months").dataset.s="";
+render();renderSnaps();paintInfo();
+})();
+</script>
+</body>
+</html>
